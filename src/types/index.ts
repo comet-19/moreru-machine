@@ -7,7 +7,8 @@ export type UrinalStatus =
   | 'empty'     // 空き
   | 'occupied'  // 使用中
   | 'danger'    // 危険人物
-  | 'broken';   // 故障・水たまり
+  | 'broken'    // 故障・使用不可
+  | 'wet';      // 前の人がこぼした水たまり
 
 /** 便器の種別 */
 export type UrinalType =

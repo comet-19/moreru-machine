@@ -57,6 +57,7 @@ const INTENSITY: Record<UrinalStatus, number> = {
   occupied: 1.0,
   danger:   5.0,
   broken:   0.8,
+  wet:      0.6,  // 使用不可ではないが衛生的忌避感
 };
 
 /** 壁面安定化ボーナス（端の便器のポテンシャルから差し引く） */
@@ -108,9 +109,9 @@ export function computePotential(urinals: Urinal[]): PotentialResult {
       raw[i] -= WALL_BONUS;
     }
 
-    // --- 3. 衛生コスト（故障便器への隣接ペナルティ） ---
+    // --- 3. 衛生コスト（故障・水たまり便器への隣接ペナルティ） ---
     for (let j = 0; j < n; j++) {
-      if (urinals[j].status === 'broken' && Math.abs(i - j) === 1) {
+      if ((urinals[j].status === 'broken' || urinals[j].status === 'wet') && Math.abs(i - j) === 1) {
         raw[i] += HYGIENE_PENALTY;
       }
     }

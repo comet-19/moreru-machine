@@ -203,18 +203,18 @@ const scenario007: Scenario = {
 
 // =============================================================================
 // Scenario 008 — 水たまりの逆説
-// [empty][broken][empty][empty][occupied]  入口←左
+// [empty][wet][empty][empty][occupied]  入口←左
 // =============================================================================
 const scenario008: Scenario = {
   id: 'scenario-008',
   title: '実験 VIII: 水たまりの逆説',
   description:
-    '#1 が壊れていて水たまりができている。#4 は使用中。' +
+    '#1 の足元に水たまりがある。前の人がこぼしたのだろう。#4 は使用中。' +
     '入口は左側。衛生か、距離か。',
   entrance: 'left',
   urinals: [
     { id: 0, status: 'empty' },
-    { id: 1, status: 'broken', note: '故障・水たまり' },
+    { id: 1, status: 'wet', note: '前の人がこぼした水たまり' },
     { id: 2, status: 'empty' },
     { id: 3, status: 'empty' },
     { id: 4, status: 'occupied' },

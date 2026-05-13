@@ -31,6 +31,11 @@ const STATUS_CONFIG = {
     hoverBg: '',
     label: '故障',
   },
+  wet: {
+    bg: 'bg-zinc-800 border-blue-900',
+    hoverBg: '',
+    label: '水たまり',
+  },
 } as const;
 
 function potentialToColor(v: number): string {
@@ -94,7 +99,15 @@ export default function UrinalUnit({ urinal, potential, isChoice, isSelected, on
         {urinal.status === 'broken' && (
           <>
             <span className="text-xl font-mono select-none text-zinc-500">✕</span>
-            <span className="text-xs text-blue-400 select-none">〜</span>
+            <span className="text-xs text-zinc-500 select-none font-mono">故障</span>
+          </>
+        )}
+
+        {/* 水たまり */}
+        {urinal.status === 'wet' && (
+          <>
+            <span className="text-xl font-mono select-none text-zinc-400">▯</span>
+            <span className="text-xs text-blue-400 select-none">〜〜</span>
           </>
         )}
       </button>
