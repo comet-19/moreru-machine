@@ -1,53 +1,20 @@
 'use client';
 
-import { useState } from 'react';
-import { SCENARIOS } from '@/data/scenarios';
-import { INITIAL_SCORES, applyDelta } from '@/lib/scoring';
-import type { UserScores, Answer } from '@/types';
+import { useExperiment } from '@/hooks/useExperiment';
 import UrinalBoard from '@/components/urinal/UrinalBoard';
 import ChoiceCard from '@/components/scenario/ChoiceCard';
 
 export default function ExperimentPage() {
-  const [index, setIndex] = useState(0);
-  const [selected, setSelected] = useState<'A' | 'B' | null>(null);
-  const [scores, setScores] = useState<UserScores>(INITIAL_SCORES);
-  const [answers, setAnswers] = useState<Answer[]>([]);
-
-  const scenario = SCENARIOS[index];
-  const isLast = index === SCENARIOS.length - 1;
-
-  function handleSelect(choiceId: 'A' | 'B') {
-    setSelected(choiceId);
-  }
-
-  function handleNext() {
-    if (!selected) return;
-    const choice = scenario.choices.find((c) => c.id === selected)!;
-    const newScores = applyDelta(scores, choice.scoreDelta);
-    const newAnswers: Answer[] = [
-      ...answers,
-      {
-        scenarioId: scenario.id,
-        choiceId: selected,
-        targetUrinalIndex: choice.targetUrinalIndex,
-        scoreDelta: choice.scoreDelta,
-      },
-    ];
-    setScores(newScores);
-    setAnswers(newAnswers);
-
-    if (isLast) {
-      const params = new URLSearchParams({
-        scores: JSON.stringify(newScores),
-      });
-      window.location.href = `/experiment/result?${params.toString()}`;
-    } else {
-      setIndex(index + 1);
-      setSelected(null);
-    }
-  }
-
-  const progress = ((index) / SCENARIOS.length) * 100;
+  const {
+    scenario,
+    questionNumber,
+    totalQuestions,
+    progress,
+    selected,
+    isLast,
+    select,
+    next,
+  } = useExperiment();
 
   return (
     <main className="min-h-screen bg-black text-zinc-300 flex flex-col items-center px-4 py-10">
@@ -57,7 +24,7 @@ export default function ExperimentPage() {
         <div className="flex flex-col gap-1">
           <div className="flex justify-between text-xs font-mono text-zinc-600">
             <span>実験進捗</span>
-            <span>{index + 1} / {SCENARIOS.length}</span>
+            <span>{questionNumber} / {totalQuestions}</span>
           </div>
           <div className="w-full h-1 bg-zinc-800 rounded">
             <div
@@ -70,7 +37,7 @@ export default function ExperimentPage() {
         {/* タイトル */}
         <div className="flex flex-col gap-1">
           <p className="text-xs font-mono text-zinc-600 uppercase tracking-widest">
-            Scenario {String(index + 1).padStart(3, '0')}
+            Scenario {String(questionNumber).padStart(3, '0')}
           </p>
           <h2 className="text-base font-semibold text-zinc-100 leading-snug">
             {scenario.title}
@@ -88,7 +55,7 @@ export default function ExperimentPage() {
             urinals={scenario.urinals}
             choices={scenario.choices}
             selectedChoice={selected}
-            onSelect={handleSelect}
+            onSelect={select}
             showPotential={false}
           />
         </div>
@@ -100,7 +67,7 @@ export default function ExperimentPage() {
               key={choice.id}
               choice={choice}
               isSelected={selected === choice.id}
-              onSelect={() => handleSelect(choice.id)}
+              onSelect={() => select(choice.id)}
             />
           ))}
         </div>
@@ -114,7 +81,7 @@ export default function ExperimentPage() {
 
         {/* 次へボタン */}
         <button
-          onClick={handleNext}
+          onClick={next}
           disabled={!selected}
           className={[
             'w-full py-3 rounded border text-sm font-medium tracking-wide transition-all duration-150',
