@@ -63,7 +63,10 @@ export function useExperiment(): ExperimentState & ExperimentActions {
     setAnswers(newAnswers);
 
     if (isLast) {
-      const params = new URLSearchParams({ scores: JSON.stringify(newScores) });
+      const params = new URLSearchParams({
+        scores:  JSON.stringify(newScores),
+        answers: JSON.stringify(newAnswers),
+      });
       router.push(`/experiment/result?${params.toString()}`);
     } else {
       setIndex((i) => i + 1);

@@ -1,9 +1,9 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { Suspense } from 'react';
+import { Suspense, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import type { UserScores, ScoreTag } from '@/types';
+import type { UserScores, ScoreTag, Answer } from '@/types';
 import { normalizeScores, classifyPersona, INITIAL_SCORES } from '@/lib/scoring';
 import ScoreRadarChart from '@/components/result/RadarChart';
 
@@ -16,17 +16,33 @@ const SCORE_LABELS: Record<ScoreTag, { label: string; color: string; bar: string
 
 function ResultContent() {
   const params = useSearchParams();
-  const raw = params.get('scores');
+  const hasPosted = useRef(false);
 
   let scores: UserScores = INITIAL_SCORES;
+  let answers: Answer[] = [];
   try {
-    if (raw) scores = JSON.parse(raw) as UserScores;
+    const rawScores = params.get('scores');
+    const rawAnswers = params.get('answers');
+    if (rawScores)  scores  = JSON.parse(rawScores)  as UserScores;
+    if (rawAnswers) answers = JSON.parse(rawAnswers) as Answer[];
   } catch {
-    // fallback to zeros
+    // fallback
   }
 
   const normalized = normalizeScores(scores);
   const persona = classifyPersona(scores);
+
+  // 実験完了時に1回だけDBへ保存
+  useEffect(() => {
+    if (hasPosted.current || answers.length === 0) return;
+    hasPosted.current = true;
+
+    fetch('/api/sessions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ scores, personaId: persona.id, answers }),
+    }).catch(() => {/* サイレントに失敗 */});
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <main className="min-h-screen bg-black text-zinc-300 flex flex-col items-center px-4 py-10">
@@ -100,7 +116,7 @@ function ResultContent() {
           </div>
         </div>
 
-        {/* 生スコア（折りたたみ風） */}
+        {/* 生スコア */}
         <div className="border border-zinc-900 rounded px-4 py-3 bg-zinc-950 font-mono text-xs text-zinc-600">
           <p className="text-zinc-500 mb-2">▸ 生スコア（正規化前）</p>
           <div className="grid grid-cols-2 gap-x-6 gap-y-1">
@@ -112,8 +128,14 @@ function ResultContent() {
           </div>
         </div>
 
-        {/* リトライ */}
+        {/* ナビゲーション */}
         <div className="flex flex-col gap-3">
+          <Link
+            href="/stats"
+            className="w-full text-center py-3 rounded border border-zinc-700 bg-zinc-950 text-zinc-300 text-sm font-medium hover:bg-zinc-900 hover:border-zinc-500 transition-all duration-150"
+          >
+            みんなの結果を見る →
+          </Link>
           <Link
             href="/experiment"
             className="w-full text-center py-3 rounded border border-zinc-600 bg-zinc-900 text-white text-sm font-medium hover:bg-zinc-800 hover:border-zinc-400 transition-all duration-150"
@@ -133,7 +155,6 @@ function ResultContent() {
   );
 }
 
-// useSearchParams は Suspense が必要
 export default function ResultPage() {
   return (
     <Suspense fallback={
