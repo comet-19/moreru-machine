@@ -88,9 +88,9 @@ export function computePotential(urinals: Urinal[]): PotentialResult {
   const n = urinals.length;
   const raw = new Array<number>(n).fill(0);
 
-  // --- 1. 各 empty 便器に対して、占有点からのポテンシャルを積算 ---
+  // --- 1. 各 empty/wet 便器に対して、占有点からのポテンシャルを積算 ---
   for (let i = 0; i < n; i++) {
-    if (urinals[i].status !== 'empty') {
+    if (urinals[i].status !== 'empty' && urinals[i].status !== 'wet') {
       raw[i] = Infinity; // 選択不可
       continue;
     }
@@ -109,11 +109,16 @@ export function computePotential(urinals: Urinal[]): PotentialResult {
       raw[i] -= WALL_BONUS;
     }
 
-    // --- 3. 衛生コスト（故障・水たまり便器への隣接ペナルティ） ---
+    // --- 3. 衛生コスト ---
+    // 故障・水たまりへの隣接ペナルティ
     for (let j = 0; j < n; j++) {
       if ((urinals[j].status === 'broken' || urinals[j].status === 'wet') && Math.abs(i - j) === 1) {
         raw[i] += HYGIENE_PENALTY;
       }
+    }
+    // 水たまりの便器自体を使う場合の追加コスト
+    if (urinals[i].status === 'wet') {
+      raw[i] += HYGIENE_PENALTY * 3;
     }
   }
 

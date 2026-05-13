@@ -27,20 +27,19 @@ function PersonFigure({ color }: { color: string }) {
 }
 
 export default function UrinalUnit({ urinal, potential, isChoice, isSelected, onClick }: Props) {
-  const isClickable = urinal.status === 'empty' && isChoice && !!onClick;
+  const isSelectable = urinal.status === 'empty' || urinal.status === 'wet';
+  const isClickable = isSelectable && isChoice && !!onClick;
   const isChild = urinal.type === 'child';
   const isAccessible = urinal.type === 'accessible';
 
-  const width = 'w-14';
   const height = isChild ? 'h-14' : 'h-20';
 
-  // 状態ごとの配色
-  const bgMap = {
+  const bgMap: Record<string, string> = {
     empty:    'bg-zinc-100 border-zinc-300',
     occupied: 'bg-zinc-600 border-zinc-500',
     danger:   'bg-red-950 border-red-700',
-    broken:   'bg-zinc-800 border-zinc-600',
-    wet:      'bg-zinc-800 border-blue-800',
+    broken:   'bg-amber-950 border-amber-700',
+    wet:      'bg-zinc-100 border-blue-400',
   };
 
   const bg = bgMap[urinal.status];
@@ -49,10 +48,12 @@ export default function UrinalUnit({ urinal, potential, isChoice, isSelected, on
     <div className="flex flex-col items-center gap-1">
       {/* 壁取り付けプレート */}
       <div className={`w-14 h-1.5 rounded-t-sm ${
-        isSelected ? 'bg-white' : 'bg-zinc-600'
+        isSelected ? 'bg-white' :
+        urinal.status === 'broken' ? 'bg-amber-800' :
+        'bg-zinc-600'
       }`} />
 
-      {/* 便器本体（底を丸くして便器シルエットに） */}
+      {/* 便器本体 */}
       <button
         onClick={isClickable ? onClick : undefined}
         disabled={!isClickable}
@@ -60,25 +61,23 @@ export default function UrinalUnit({ urinal, potential, isChoice, isSelected, on
         style={{ borderRadius: '4px 4px 45% 45% / 4px 4px 35% 35%' }}
         className={[
           'relative flex flex-col items-center justify-center gap-1',
-          `${width} ${height}`,
+          `w-14 ${height}`,
           'border-2 transition-all duration-150',
           bg,
           isClickable ? 'hover:brightness-90 cursor-pointer' : 'cursor-default',
           isSelected ? 'ring-2 ring-white ring-offset-1 ring-offset-zinc-950 scale-105 brightness-110' : '',
-          !isSelected && isChoice && urinal.status === 'empty' ? 'ring-1 ring-zinc-400 ring-offset-1 ring-offset-zinc-950' : '',
+          !isSelected && isChoice && isSelectable ? 'ring-1 ring-zinc-400 ring-offset-1 ring-offset-zinc-950' : '',
         ].join(' ')}
       >
-        {/* 内部コンテンツ */}
         {urinal.status === 'empty' && (
           <>
             {isAccessible && <span className="text-base text-blue-400 select-none">♿</span>}
             {isChild && <span className="text-xs font-mono text-zinc-400 select-none">child</span>}
-            {/* 排水口 */}
             <div className="absolute bottom-2 w-2 h-1 rounded-full bg-zinc-300/40" />
           </>
         )}
 
-        {(urinal.status === 'occupied') && (
+        {urinal.status === 'occupied' && (
           <PersonFigure color="bg-zinc-300" />
         )}
 
@@ -89,26 +88,29 @@ export default function UrinalUnit({ urinal, potential, isChoice, isSelected, on
           </>
         )}
 
+        {/* 故障: 警戒色 + 使用不可マーク */}
         {urinal.status === 'broken' && (
           <div className="flex flex-col items-center gap-1">
-            <span className="text-lg font-mono text-zinc-500 select-none leading-none">✕</span>
-            <span className="text-xs font-mono text-zinc-500 select-none">故障</span>
+            <span className="text-xl font-mono text-amber-500 select-none leading-none">✕</span>
+            <span className="text-xs font-mono text-amber-700 select-none leading-none">使用不可</span>
           </div>
         )}
 
+        {/* 水たまり: 空き便器ベースに青い水表現 */}
         {urinal.status === 'wet' && (
-          <div className="flex flex-col items-center gap-0.5">
-            <div className="absolute bottom-2 flex gap-0.5">
-              <div className="w-1 h-1 rounded-full bg-blue-400/70" />
-              <div className="w-2 h-1 rounded-full bg-blue-400/50" />
-              <div className="w-1 h-1 rounded-full bg-blue-400/70" />
+          <>
+            {isAccessible && <span className="text-base text-blue-400 select-none">♿</span>}
+            {isChild && <span className="text-xs font-mono text-zinc-400 select-none">child</span>}
+            <div className="absolute bottom-3 flex gap-0.5">
+              <div className="w-1.5 h-1 rounded-full bg-blue-400/80" />
+              <div className="w-2.5 h-1 rounded-full bg-blue-400/60" />
+              <div className="w-1.5 h-1 rounded-full bg-blue-400/80" />
             </div>
-            <span className="text-xs text-blue-400/80 select-none font-mono">〜〜</span>
-          </div>
+            <div className="absolute bottom-2 w-2 h-1 rounded-full bg-zinc-300/40" />
+          </>
         )}
       </button>
 
-      {/* 番号 */}
       <span className="text-xs text-zinc-500 font-mono">#{urinal.id}</span>
 
       {potential !== undefined && isFinite(potential) && (

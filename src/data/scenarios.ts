@@ -166,6 +166,7 @@ const scenario007: Scenario = {
   ],
   urinalChoices: [
     { targetUrinalIndex: 0, sublabel: '壁あり。入口に最も近い。#1（水たまり）に隣接。', scoreDelta: { rationality: 2, chaos: 1 } },
+    { targetUrinalIndex: 1, sublabel: '#1（水たまり）を使用。', scoreDelta: { chaos: 3 } },
     { targetUrinalIndex: 2, sublabel: '#1（水たまり）に隣接。右側。', scoreDelta: { chaos: 1, social_distance: 1 } },
     { targetUrinalIndex: 3, sublabel: '#1（水たまり）から2基。#4（使用中）に隣接。', scoreDelta: { obedience: 2, social_distance: 1 } },
   ],
@@ -191,6 +192,7 @@ const scenario008: Scenario = {
   urinalChoices: [
     { targetUrinalIndex: 0, sublabel: '壁あり。入口に最も近い。#2（水たまり）まで2基。', scoreDelta: { obedience: 2 } },
     { targetUrinalIndex: 1, sublabel: '#2（水たまり）に隣接。入口から2番目。', scoreDelta: { chaos: 2 } },
+    { targetUrinalIndex: 2, sublabel: '#2（水たまり）を使用。', scoreDelta: { chaos: 3 } },
     { targetUrinalIndex: 3, sublabel: '#2（水たまり）に隣接。入口から4番目。', scoreDelta: { chaos: 2 } },
     { targetUrinalIndex: 4, sublabel: '壁あり。入口から最も遠い。#2（水たまり）まで2基。', scoreDelta: { social_distance: 3, rationality: 1 } },
   ],
