@@ -31,8 +31,8 @@ export default function UrinalUnit({ urinal, potential, isChoice, isSelected, on
   const isChild = urinal.type === 'child';
   const isAccessible = urinal.type === 'accessible';
 
-  const width = isAccessible ? 'w-16' : 'w-14';
-  const height = isChild ? 'h-14' : isAccessible ? 'h-24' : 'h-20';
+  const width = 'w-14';
+  const height = isChild ? 'h-14' : 'h-20';
 
   // 状態ごとの配色
   const bgMap = {
@@ -48,7 +48,7 @@ export default function UrinalUnit({ urinal, potential, isChoice, isSelected, on
   return (
     <div className="flex flex-col items-center gap-1">
       {/* 壁取り付けプレート */}
-      <div className={`${isAccessible ? 'w-16' : 'w-14'} h-1.5 rounded-t-sm ${
+      <div className={`w-14 h-1.5 rounded-t-sm ${
         isSelected ? 'bg-white' : 'bg-zinc-600'
       }`} />
 

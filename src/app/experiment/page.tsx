@@ -38,16 +38,6 @@ export default function ExperimentPage() {
           </div>
         </div>
 
-        {/* タイトル */}
-        <div className="flex flex-col gap-1">
-          <p className="text-xs font-mono text-zinc-600 uppercase tracking-widest">
-            Scenario {String(questionNumber).padStart(3, '0')}
-          </p>
-          <h2 className="text-base font-semibold text-zinc-100 leading-snug">
-            {scenario.title}
-          </h2>
-        </div>
-
         {/* 説明文 */}
         <p className="text-sm text-zinc-400 leading-7 border-l-2 border-zinc-700 pl-4">
           {scenario.description}
