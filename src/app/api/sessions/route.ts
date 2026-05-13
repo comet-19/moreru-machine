@@ -32,10 +32,9 @@ export async function POST(request: NextRequest) {
     .from('answers')
     .insert(
       answers.map((a) => ({
-        session_id:           session.id,
-        scenario_id:          a.scenarioId,
-        choice_id:            a.choiceId,
-        target_urinal_index:  a.targetUrinalIndex ?? null,
+        session_id:          session.id,
+        scenario_id:         a.scenarioId,
+        target_urinal_index: a.urinalIndex,
       })),
     );
 

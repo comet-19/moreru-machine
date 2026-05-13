@@ -2,7 +2,7 @@
 
 import { useExperiment } from '@/hooks/useExperiment';
 import UrinalBoard from '@/components/urinal/UrinalBoard';
-import ChoiceCard from '@/components/scenario/ChoiceCard';
+import SelectedInfo from '@/components/scenario/SelectedInfo';
 
 export default function ExperimentPage() {
   const {
@@ -15,6 +15,10 @@ export default function ExperimentPage() {
     select,
     next,
   } = useExperiment();
+
+  const selectedChoice = selected !== null
+    ? scenario.urinalChoices.find((c) => c.targetUrinalIndex === selected) ?? null
+    : null;
 
   return (
     <main className="min-h-screen bg-black text-zinc-300 flex flex-col items-center px-4 py-10">
@@ -53,27 +57,19 @@ export default function ExperimentPage() {
         <div className="bg-zinc-950 border border-zinc-800 rounded-lg px-6 py-6">
           <UrinalBoard
             urinals={scenario.urinals}
-            choices={scenario.choices}
-            selectedChoice={selected}
+            urinalChoices={scenario.urinalChoices}
+            selectedIndex={selected}
             onSelect={select}
+            entrance={scenario.entrance}
             showPotential={false}
           />
         </div>
 
-        {/* 選択肢 */}
-        <div className="flex flex-col gap-3">
-          {scenario.choices.map((choice) => (
-            <ChoiceCard
-              key={choice.id}
-              choice={choice}
-              isSelected={selected === choice.id}
-              onSelect={() => select(choice.id)}
-            />
-          ))}
-        </div>
+        {/* 選択情報 */}
+        <SelectedInfo choice={selectedChoice} />
 
-        {/* モデル注釈 */}
-        {scenario.modelNote && (
+        {/* モデル注釈（選択後に表示） */}
+        {selected !== null && scenario.modelNote && (
           <p className="text-xs font-mono text-zinc-600 leading-5 border border-zinc-900 rounded px-3 py-2 bg-zinc-950">
             ▸ {scenario.modelNote}
           </p>
@@ -82,10 +78,10 @@ export default function ExperimentPage() {
         {/* 次へボタン */}
         <button
           onClick={next}
-          disabled={!selected}
+          disabled={selected === null}
           className={[
             'w-full py-3 rounded border text-sm font-medium tracking-wide transition-all duration-150',
-            selected
+            selected !== null
               ? 'border-zinc-500 bg-zinc-900 text-white hover:bg-zinc-800 hover:border-zinc-300 cursor-pointer'
               : 'border-zinc-800 bg-zinc-950 text-zinc-700 cursor-not-allowed',
           ].join(' ')}

@@ -7,54 +7,43 @@ import { INITIAL_SCORES, applyDelta } from '@/lib/scoring';
 import type { UserScores, Answer, Scenario } from '@/types';
 
 export interface ExperimentActions {
-  /** 選択肢を選ぶ（便器クリック or カードクリック） */
-  select: (choiceId: 'A' | 'B') => void;
-  /** 次の問題へ進む / 最終問なら結果ページへ遷移 */
+  select: (urinalIndex: number) => void;
   next: () => void;
 }
 
 export interface ExperimentState {
-  /** 現在のシナリオ */
   scenario: Scenario;
-  /** 表示用問題番号（1-origin） */
   questionNumber: number;
-  /** 総問題数 */
   totalQuestions: number;
-  /** 進捗率（0〜100） */
   progress: number;
-  /** 現在の選択（null = 未選択） */
-  selected: 'A' | 'B' | null;
-  /** 最終問か否か */
+  selected: number | null;
   isLast: boolean;
-  /** 累積スコア（デバッグ・結果プレビュー用） */
   scores: UserScores;
-  /** 回答履歴 */
   answers: Answer[];
 }
 
 export function useExperiment(): ExperimentState & ExperimentActions {
   const router = useRouter();
   const [index, setIndex] = useState(0);
-  const [selected, setSelected] = useState<'A' | 'B' | null>(null);
+  const [selected, setSelected] = useState<number | null>(null);
   const [scores, setScores] = useState<UserScores>(INITIAL_SCORES);
   const [answers, setAnswers] = useState<Answer[]>([]);
 
   const scenario = SCENARIOS[index];
   const isLast = index === SCENARIOS.length - 1;
 
-  const select = useCallback((choiceId: 'A' | 'B') => {
-    setSelected(choiceId);
+  const select = useCallback((urinalIndex: number) => {
+    setSelected(urinalIndex);
   }, []);
 
   const next = useCallback(() => {
-    if (!selected) return;
+    if (selected === null) return;
 
-    const choice = scenario.choices.find((c) => c.id === selected)!;
+    const choice = scenario.urinalChoices.find((c) => c.targetUrinalIndex === selected)!;
     const newScores = applyDelta(scores, choice.scoreDelta);
     const newAnswer: Answer = {
       scenarioId: scenario.id,
-      choiceId: selected,
-      targetUrinalIndex: choice.targetUrinalIndex,
+      urinalIndex: selected,
       scoreDelta: choice.scoreDelta,
     };
     const newAnswers = [...answers, newAnswer];

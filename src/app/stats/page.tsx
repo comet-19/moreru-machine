@@ -17,7 +17,7 @@ const SCORE_LABELS: Record<ScoreTag, { label: string; color: string; bar: string
 async function fetchStats() {
   const [{ data: sessions }, { data: answers }] = await Promise.all([
     supabase.from('sessions').select('social_distance, rationality, obedience, chaos, persona_id'),
-    supabase.from('answers').select('scenario_id, choice_id'),
+    supabase.from('answers').select('scenario_id, target_urinal_index'),
   ]);
 
   const total = sessions?.length ?? 0;
@@ -44,21 +44,19 @@ async function fetchStats() {
     personaCounts[s.persona_id] = (personaCounts[s.persona_id] ?? 0) + 1;
   });
 
-  // シナリオ別 A/B
-  const scenarioCounts: Record<string, { A: number; B: number }> = {};
+  // シナリオ別 選択分布（便器インデックスごと）
+  const scenarioChoiceCounts: Record<string, Record<number, number>> = {};
   answers?.forEach((a) => {
-    if (!scenarioCounts[a.scenario_id]) scenarioCounts[a.scenario_id] = { A: 0, B: 0 };
-    const choiceId = a.choice_id as 'A' | 'B';
-    if (choiceId === 'A' || choiceId === 'B') {
-      scenarioCounts[a.scenario_id][choiceId]++;
-    }
+    if (!scenarioChoiceCounts[a.scenario_id]) scenarioChoiceCounts[a.scenario_id] = {};
+    const idx = a.target_urinal_index as number;
+    scenarioChoiceCounts[a.scenario_id][idx] = (scenarioChoiceCounts[a.scenario_id][idx] ?? 0) + 1;
   });
 
-  return { total, scoreAverages, personaCounts, scenarioCounts };
+  return { total, scoreAverages, personaCounts, scenarioChoiceCounts };
 }
 
 export default async function StatsPage() {
-  const { total, scoreAverages, personaCounts, scenarioCounts } = await fetchStats();
+  const { total, scoreAverages, personaCounts, scenarioChoiceCounts } = await fetchStats();
 
   const maxScore = Math.max(...Object.values(scoreAverages));
 
@@ -134,40 +132,34 @@ export default async function StatsPage() {
 
             <div className="border-t border-zinc-800" />
 
-            {/* シナリオ別選択率 */}
-            <section className="flex flex-col gap-4">
+            {/* シナリオ別選択分布 */}
+            <section className="flex flex-col gap-5">
               <h2 className="text-xs font-mono text-zinc-500 uppercase tracking-widest">
-                ▸ シナリオ別 A/B 選択率
+                ▸ シナリオ別 選択分布
               </h2>
               {SCENARIOS.map((scenario) => {
-                const counts = scenarioCounts[scenario.id] ?? { A: 0, B: 0 };
-                const total_sc = counts.A + counts.B;
-                const pctA = total_sc > 0 ? Math.round((counts.A / total_sc) * 100) : 50;
-                const pctB = 100 - pctA;
+                const counts = scenarioChoiceCounts[scenario.id] ?? {};
+                const sc_total = Object.values(counts).reduce((s, n) => s + n, 0);
                 return (
                   <div key={scenario.id} className="flex flex-col gap-2">
                     <p className="text-xs text-zinc-400">{scenario.title}</p>
-                    <div className="flex gap-1 items-center">
-                      {/* A バー */}
-                      <span className="text-xs font-mono text-sky-400 w-6 text-right">A</span>
-                      <div className="flex-1 h-4 bg-zinc-800 rounded overflow-hidden flex">
-                        <div className="h-full bg-sky-700 flex items-center justify-end pr-1 transition-all"
-                          style={{ width: `${pctA}%` }}>
-                          {pctA >= 15 && (
-                            <span className="text-xs text-sky-200 font-mono">{pctA}%</span>
-                          )}
-                        </div>
-                        <div className="h-full bg-amber-700 flex items-center justify-start pl-1 flex-1 transition-all">
-                          {pctB >= 15 && (
-                            <span className="text-xs text-amber-200 font-mono">{pctB}%</span>
-                          )}
-                        </div>
-                      </div>
-                      <span className="text-xs font-mono text-amber-400 w-6">B</span>
-                    </div>
-                    <div className="flex justify-between text-xs font-mono text-zinc-600 px-7">
-                      <span>{scenario.choices[0].label}</span>
-                      <span>{scenario.choices[1].label}</span>
+                    <div className="flex flex-col gap-1">
+                      {scenario.urinalChoices.map((choice) => {
+                        const n = counts[choice.targetUrinalIndex] ?? 0;
+                        const pct = sc_total > 0 ? Math.round((n / sc_total) * 100) : 0;
+                        return (
+                          <div key={choice.targetUrinalIndex} className="flex items-center gap-2">
+                            <span className="text-xs font-mono text-zinc-500 w-5 text-right">#{choice.targetUrinalIndex}</span>
+                            <div className="flex-1 h-3 bg-zinc-800 rounded overflow-hidden">
+                              <div
+                                className="h-full bg-zinc-500 rounded transition-all"
+                                style={{ width: `${pct}%` }}
+                              />
+                            </div>
+                            <span className="text-xs font-mono text-zinc-600 w-8 text-right">{pct}%</span>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 );

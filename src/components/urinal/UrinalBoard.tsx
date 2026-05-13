@@ -1,35 +1,28 @@
 'use client';
 
-import type { Urinal, Choice } from '@/types';
+import type { Urinal, UrinalChoice } from '@/types';
 import { getUrinalPotentialMap } from '@/lib/potential';
 import UrinalUnit from './UrinalUnit';
 
 interface Props {
   urinals: Urinal[];
-  choices: [Choice, Choice];
-  /** 現在選択中の choice id */
-  selectedChoice?: 'A' | 'B' | null;
-  onSelect?: (choiceId: 'A' | 'B') => void;
-  /** ポテンシャル値を表示するか */
+  urinalChoices: UrinalChoice[];
+  selectedIndex?: number | null;
+  onSelect?: (urinalIndex: number) => void;
+  entrance?: 'left' | 'right';
   showPotential?: boolean;
 }
 
 export default function UrinalBoard({
   urinals,
-  choices,
-  selectedChoice,
+  urinalChoices,
+  selectedIndex,
   onSelect,
+  entrance,
   showPotential = false,
 }: Props) {
   const potentialMap = showPotential ? getUrinalPotentialMap(urinals) : null;
-
-  // どの便器インデックスがどの選択肢に対応するか
-  const highlightMap = new Map<number, 'A' | 'B'>();
-  choices.forEach((c) => {
-    if (c.targetUrinalIndex !== undefined) {
-      highlightMap.set(c.targetUrinalIndex, c.id);
-    }
-  });
+  const choiceSet = new Set(urinalChoices.map((c) => c.targetUrinalIndex));
 
   return (
     <div className="flex flex-col items-center gap-4">
@@ -39,9 +32,8 @@ export default function UrinalBoard({
       {/* 便器列 */}
       <div className="flex gap-3 items-end">
         {urinals.map((urinal) => {
-          const highlight = highlightMap.get(urinal.id) ?? null;
-          const isSelected =
-            highlight !== null && selectedChoice === highlight;
+          const isChoice = choiceSet.has(urinal.id);
+          const isSelected = selectedIndex === urinal.id;
           const potential = potentialMap?.find((p) => p.index === urinal.id)?.potential;
 
           return (
@@ -49,13 +41,9 @@ export default function UrinalBoard({
               key={urinal.id}
               urinal={urinal}
               potential={potential}
-              highlight={highlight}
+              isChoice={isChoice}
               isSelected={isSelected}
-              onClick={
-                highlight && onSelect
-                  ? () => onSelect(highlight)
-                  : undefined
-              }
+              onClick={isChoice && onSelect ? () => onSelect(urinal.id) : undefined}
             />
           );
         })}
@@ -63,6 +51,16 @@ export default function UrinalBoard({
 
       {/* 床 */}
       <div className="w-full h-1 bg-zinc-600 rounded" />
+
+      {/* 入口インジケーター */}
+      {entrance && (
+        <div className={`w-full flex ${entrance === 'left' ? 'justify-start' : 'justify-end'}`}>
+          <div className="flex flex-col items-center gap-0.5">
+            <div className="w-8 h-1 bg-zinc-500 rounded" />
+            <span className="text-xs font-mono text-zinc-500">入口</span>
+          </div>
+        </div>
+      )}
 
       {showPotential && (
         <p className="text-xs text-zinc-500 font-mono">
